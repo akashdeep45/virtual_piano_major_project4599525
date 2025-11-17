@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Piano | Play with Hand Tracking</title>
-    <meta name="description" content="Play piano using hand tracking technology. No physical keyboard required!">
+    <title>Document</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
     <script type="module" src="script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -17,43 +15,29 @@
 </head>
 <body>
     <button id="sidebarToggle" class="sidebar-toggle" aria-controls="controlSidebar" aria-expanded="false">
-        <i class="fas fa-sliders-h"></i> Controls
+        ☰ Controls
     </button>
     <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
     <aside id="controlSidebar" class="sidebar" aria-label="Piano control sidebar">
         <div class="sidebar-header">
-            <h2><i class="fas fa-piano-keyboard"></i> Piano Controls</h2>
-            <button id="sidebarClose" class="sidebar-close" aria-label="Close controls">
-                <i class="fas fa-times"></i>
-            </button>
+            <h2>Control Center</h2>
+            <button id="sidebarClose" class="sidebar-close" aria-label="Close controls">×</button>
         </div>
         <div class="sidebar-body">
             <section class="control-section">
                 <header>
-                    <span class="section-title"><i class="fas fa-sliders-h"></i> Piano Settings</span>
+                    <span class="section-title">🎹 Piano Controls</span>
                 </header>
                 <div class="control-row">
-                    <button id="pianoDecrease" class="pill danger" title="Decrease octaves">
-                        <i class="fas fa-minus"></i>
-                    </button>
+                    <button id="pianoDecrease" class="pill danger">−</button>
                     <span id="pianoOctaves" class="value-pill">2.5 Octaves</span>
-                    <button id="pianoIncrease" class="pill success" title="Increase octaves">
-                        <i class="fas fa-plus"></i>
-                    </button>
+                    <button id="pianoIncrease" class="pill success">+</button>
                 </div>
                 <div class="control-actions">
-                    <button id="pianoFlipH" class="pill secondary" title="Flip horizontal">
-                        <i class="fas fa-arrows-alt-h"></i> Flip H
-                    </button>
-                    <button id="pianoFlipV" class="pill secondary" title="Flip vertical">
-                        <i class="fas fa-arrows-alt-v"></i> Flip V
-                    </button>
-                    <button id="pianoRotate" class="pill accent" title="Rotate 90°">
-                        <i class="fas fa-redo"></i> Rotate
-                    </button>
-                    <button id="pianoReset" class="pill muted" title="Reset all">
-                        <i class="fas fa-undo"></i> Reset
-                    </button>
+                    <button id="pianoFlipH" class="pill secondary">🔄 Flip H</button>
+                    <button id="pianoFlipV" class="pill secondary">↕️ Flip V</button>
+                    <button id="pianoRotate" class="pill accent">🔄 Rotate</button>
+                    <button id="pianoReset" class="pill muted">↺ Reset</button>
                 </div>
                 <div class="slider-group">
                     <label>Size: <span id="pianoSize">100%</span></label>
@@ -70,340 +54,134 @@
                 <p class="tip-box">💡 Drag piano keys to reposition them!</p>
             </section>
             <section class="control-section">
-                <header>
-                    <span class="section-title"><i class="fas fa-hands"></i> Hand Tracking</span>
-                </header>
-                <div class="slider-group">
-                    <label><i class="fas fa-hand-paper"></i> Max Hands: <span id="hands-count">2</span></label>
-                    <input type="range" id="maxHandsSlider" min="1" max="2" step="1" value="2">
-                </div>
-                <div class="slider-group">
-                    <label><i class="fas fa-bullseye"></i> Detection Sensitivity: <span id="detect-conf">0.2</span></label>
-                    <input type="range" id="detectSlider" min="0.1" max="1" step="0.05" value="0.2">
-                    <small class="helper-text">Lower = More sensitive to hand detection</small>
-                </div>
-                <div class="slider-group">
-                    <label><i class="fas fa-fingerprint"></i> Tracking Sensitivity: <span id="track-conf">0.2</span></label>
-                    <input type="range" id="trackSlider" min="0.1" max="1" step="0.05" value="0.2">
-                    <small class="helper-text">Lower = More responsive to hand movements</small>
-                </div>
-                <p class="tip-box">
-                    <i class="fas fa-lightbulb"></i> <strong>Pro Tip:</strong> Lower values make detection more sensitive but may cause more false positives.
-                    <span class="tiny-txt">Supports all 5 fingers per hand (10 total!)</span>
-                </p>
+                <label>🖐️ Max Hands: <span id="hands-count">2</span></label>
+                <input type="range" id="maxHandsSlider" min="1" max="2" step="1" value="2">
+                <label>🔎 Detection Confidence: <span id="detect-conf">0.2</span> (Lower = More Sensitive)</label>
+                <input type="range" id="detectSlider" min="0.1" max="1" step="0.05" value="0.2">
+                <label>🎯 Tracking Confidence: <span id="track-conf">0.2</span> (Lower = More Sensitive)</label>
+                <input type="range" id="trackSlider" min="0.1" max="1" step="0.05" value="0.2">
+                <span class="tiny-txt"><i>✅ Now supports: Thumb + All 4 fingers (5 fingers per hand = 10 total!)</i></span>
+                <small class="helper-text">💡 Lower values = faster, more sensitive detection (optimized for fast playing)</small>
             </section>
             <section class="control-section">
                 <header>
-                    <span class="section-title"><i class="fas fa-video"></i> Camera Settings</span>
+                    <span class="section-title">📷 Camera Source</span>
                 </header>
-                <div class="camera-options">
-                    <label class="camera-option">
-                        <input type="radio" name="cameraSource" id="cameraLocal" value="local" checked>
-                        <div class="camera-option-content">
-                            <i class="fas fa-laptop"></i>
-                            <span>Local Webcam</span>
-                        </div>
-                    </label>
-                    <label class="camera-option">
-                        <input type="radio" name="cameraSource" id="cameraMobile" value="mobile">
-                        <div class="camera-option-content">
-                            <i class="fas fa-mobile-alt"></i>
-                            <span>Mobile Camera</span>
-                        </div>
-                    </label>
-                </div>
+                <label class="inline">
+                    <input type="radio" name="cameraSource" id="cameraLocal" value="local" checked>
+                    📹 Local Webcam
+                </label>
+                <label class="inline">
+                    <input type="radio" name="cameraSource" id="cameraMobile" value="mobile">
+                    📱 Mobile Camera (IP)
+                </label>
                 <div id="mobileCameraInput" class="camera-input">
-                    <div class="input-group">
-                        <i class="fas fa-link"></i>
-                        <input type="text" id="ipCameraUrl" placeholder="http://192.168.1.100:8080">
-                    </div>
-                    <div class="button-group">
-                        <button id="connectMobileBtn" class="pill primary block">
-                            <i class="fas fa-plug"></i> Connect
-                        </button>
-                        <button id="testUrlBtn" class="pill secondary block">
-                            <i class="fas fa-external-link-alt"></i> Test URL
-                        </button>
-                    </div>
-                    <div class="camera-tips">
-                        <div class="tip">
-                            <i class="fas fa-check-circle"></i>
-                            <span><strong>IP Webcam</strong> (Recommended)</span>
-                        </div>
-                        <div class="tip">
-                            <i class="fas fa-info-circle"></i>
-                            <span>For IP Webcam: <code>http://[your-ip]:8080</code></span>
-                        </div>
-                        <div class="tip">
-                            <i class="fas fa-info-circle"></i>
-                            <span>For DroidCam: <code>http://[your-ip]:4747/video</code></span>
-                        </div>
-                    </div>
+                    <input type="text" id="ipCameraUrl" placeholder="http://192.168.1.100:8080">
+                    <button id="connectMobileBtn" class="pill block">Connect</button>
+                    <button id="testUrlBtn" class="pill secondary block">Test URL in Browser</button>
+                    <small class="helper-text">
+                        <strong>Recommended: IP Webcam</strong> (works best!)<br>
+                        <strong>For IP Webcam:</strong> Enter base URL (e.g., http://192.168.1.100:8080)<br>
+                        <strong>For DroidCam:</strong> Enter full URL (e.g., http://192.168.1.4:4747/video)
+                    </small>
                 </div>
             </section>
             <section class="control-section">
                 <header>
-                    <span class="section-title"> Playing Sensitivity</span>
+                    <span class="section-title">🔄 Camera Transform</span>
+                </header>
+                <label class="inline">
+                    <input type="checkbox" id="flipHorizontal" checked>
+                    🔄 Flip Horizontal (Mirror)
+                </label>
+                <label class="inline">
+                    <input type="checkbox" id="flipVertical">
+                    ↕️ Flip Vertical
+                </label>
+                <label class="inline">
+                    <input type="checkbox" id="rotate180">
+                    🔄 Rotate 180°
+                </label>
+            </section>
+            <section class="control-section">
+                <header>
+                    <span class="section-title">🎹 Playing Sensitivity</span>
                 </header>
                 <div class="slider-group">
-                    <label> Movement Sensitivity: <span id="movement-threshold">10</span>px (Lower = Faster Response)</label>
+                    <label>Movement Threshold: <span id="movement-threshold">10</span>px (Lower = More Sensitive)</label>
                     <input type="range" id="movementThresholdSlider" min="3" max="20" step="1" value="10">
-                    <small class="helper-text">Minimum finger movement to trigger note</small>
+                    <small class="helper-text">Minimum finger movement to trigger a note</small>
                 </div>
                 <div class="slider-group">
-                    <label> Press Sensitivity: <span id="downward-threshold">8</span>px (Lower = Easier to Press)</label>
+                    <label>Downward Press: <span id="downward-threshold">8</span>px (Lower = More Sensitive)</label>
                     <input type="range" id="downwardThresholdSlider" min="2" max="15" step="1" value="8">
                     <small class="helper-text">Downward movement to trigger press</small>
                 </div>
                 <div class="slider-group">
-                    <label> Rest Detection: <span id="rest-threshold">5</span> frames (Lower = More Sensitive)</label>
-                    <input type="range" id="restThresholdSlider" min="1" max="10" step="1" value="5">
-                    <small class="helper-text">Frames before finger is considered at rest</small>
+                    <label>Rest Frames: <span id="rest-frames">5</span> (Higher = Less Sensitive to Resting)</label>
+                    <input type="range" id="restFramesSlider" min="2" max="10" step="1" value="5">
+                    <small class="helper-text">Frames before finger is considered "at rest"</small>
                 </div>
                 <div class="slider-group">
-                    <label> Trigger Cooldown: <span id="cooldown-frames">8</span> frames (Lower = Faster Repeats)</label>
-                    <input type="range" id="cooldownSlider" min="3" max="15" step="1" value="8">
-                    <small class="helper-text">Frames before same key can trigger again</small>
+                    <label>Trigger Cooldown: <span id="cooldown-frames">8</span> frames (Higher = Slower Repeats)</label>
+                    <input type="range" id="cooldownFramesSlider" min="3" max="15" step="1" value="8">
+                    <small class="helper-text">Frames to wait before same key can trigger again</small>
                 </div>
                 <div class="slider-group">
-                    <label> Smoothing: <span id="smoothing-alpha">0.45</span> (Lower = More Responsive)</label>
-                    <input type="range" id="smoothingSlider" min="0.1" max="0.9" step="0.05" value="0.45">
-                    <small class="helper-text">Hand tracking smoothness vs responsiveness</small>
+                    <label>Landmark Smoothing: <span id="landmark-smoothing">0.45</span> (Higher = Smoother)</label>
+                    <input type="range" id="landmarkSmoothingSlider" min="0.1" max="0.9" step="0.05" value="0.45">
+                    <small class="helper-text">Smoothing for hand tracking (0.1=fast, 0.9=smooth)</small>
                 </div>
-                <div class="control-actions">
-                    <button id="resetSensitivity" class="pill muted"> Reset to Default</button>
+                <div class="slider-group">
+                    <label>Key Detection Smoothing: <span id="key-smoothing-frames">3</span> frames</label>
+                    <input type="range" id="keySmoothingFramesSlider" min="1" max="8" step="1" value="3">
+                    <small class="helper-text">Frames to average for key detection (1=instant, 8=very smooth)</small>
                 </div>
-                <p class="tip-box"> Adjust these for accurate, smooth playing. Lower values = faster response, higher = more stable</p>
-            </section>
-            <section class="control-section">
-                <header>
-                    <span class="section-title"><i class="fas fa-sync-alt"></i> Camera Transform</span>
-                </header>
-                <div class="transform-grid">
-                    <label class="transform-option">
-                        <input type="checkbox" id="flipHorizontal" checked>
-                        <div class="transform-content">
-                            <i class="fas fa-arrows-alt-h"></i>
-                            <span>Flip Horizontal</span>
-                        </div>
-                    </label>
-                    <label class="transform-option">
-                        <input type="checkbox" id="flipVertical">
-                        <div class="transform-content">
-                            <i class="fas fa-arrows-alt-v"></i>
-                            <span>Flip Vertical</span>
-                        </div>
-                    </label>
-                    <label class="transform-option">
-                        <input type="checkbox" id="rotate180">
-                        <div class="transform-content">
-                            <i class="fas fa-redo"></i>
-                            <span>Rotate 180°</span>
-                        </div>
-                    </label>
+                <div class="slider-group">
+                    <label>Activation Threshold: <span id="activation-threshold">0.5</span> (Lower = Faster Response)</label>
+                    <input type="range" id="activationThresholdSlider" min="0.2" max="0.8" step="0.1" value="0.5">
+                    <small class="helper-text">Detection rate needed to activate key</small>
                 </div>
+                <div class="slider-group">
+                    <label>Deactivation Threshold: <span id="deactivation-threshold">0.3</span> (Lower = Faster Release)</label>
+                    <input type="range" id="deactivationThresholdSlider" min="0.1" max="0.6" step="0.1" value="0.3">
+                    <small class="helper-text">Detection rate to release key</small>
+                </div>
+                <p class="tip-box">💡 Adjust these settings to fine-tune your playing experience. Lower values = faster/more sensitive, Higher values = smoother/less sensitive</p>
             </section>
         </div>
     </aside>
 
     <div class="main">
         <div class="left">
-            <div class="video-container">
-                <div class="video-header">
-                    <h2><i class="fas fa-piano"></i> Virtual Piano</h2>
-                    <div class="status-indicator">
-                        <span class="status-dot"></span>
-                        <span class="status-text">Initializing...</span>
-                    </div>
-                </div>
-                <div class="video-box">
-                    <video id="webcam" autoplay playsinline muted></video>
-                    <canvas id="layout-canvas"></canvas>
-                    <div class="video-overlay">
-                        <div class="loading-spinner">
-                            <div class="spinner"></div>
-                            <p>Loading hand detection model...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="video-controls">
-                    <button id="dummy-layout" class="control-btn">
-                        <i class="fas fa-hand-pointer"></i>
-                        <span>Play in the Air</span>
-                    </button>
-                    <button id="capture-btn" class="control-btn primary">
-                        <i class="fas fa-camera"></i>
-                        <span>Capture Layout (1)</span>
-                    </button>
-                    <button id="make-mask" class="control-btn accent" disabled>
-                        <i class="fas fa-magic"></i>
-                        <span>Apply Mask (2)</span>
-                </div>
+            <div class="video-box">
+                <video id="webcam" autoplay playsinline muted></video>
+                <canvas id="layout-canvas"></canvas>
             </div>
+            <div class="btns">
+                <button id="dummy-layout">Play in the air</button>
+                <button id="capture-btn">Play on paper (1)</button>
+                <button id="make-mask" disabled>Like the mask? (2)</button>
+            </div> 
         </div>
         <div class="right">
-            <div class="panel">
-                <div class="panel-header">
-                    <h3><i class="fas fa-music"></i> Currently Playing</h3>
+            <div class="out-images">
+                <div class="result-box">
+                    <img id="captured-img" alt="captured frame">
                 </div>
-                <div class="panel-body">
-                    <div class="note-display">
-                        <span class="note-label">Current Note:</span>
-                        <span id="note-display" class="note-value">--</span>
-                    </div>
+                <div class="result-box">
+                    <canvas id="raw-canvas"></canvas>
                 </div>
             </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <h3><i class="fas fa-image"></i> Preview</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="preview-tabs">
-                        <button class="tab-btn active" data-tab="captured">Captured Frame</button>
-                        <button class="tab-btn" data-tab="processed">Processed</button>
-                    </div>
-                    <div class="preview-content">
-                        <div class="preview-tab active" id="captured-preview">
-                            <div class="result-box">
-                                <img id="captured-img" alt="Captured frame">
-                                <div class="preview-placeholder">
-                                    <i class="fas fa-image"></i>
-                                    <p>No image captured yet</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="preview-tab" id="processed-preview">
-                            <div class="result-box">
-                                <canvas id="raw-canvas"></canvas>
-                                <div class="preview-placeholder">
-                                    <i class="fas fa-cog fa-spin"></i>
-                                    <p>Processing image...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <h3><i class="fas fa-info-circle"></i> Quick Help</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="help-item">
-                        <i class="fas fa-hand-pointer"></i>
-                        <div>
-                            <h4>Play in the Air</h4>
-                            <p>Use your hands to play virtual piano keys in the air.</p>
-                        </div>
-                    </div>
-                    <div class="help-item">
-                        <i class="fas fa-print"></i>
-                        <div>
-                            <h4>Print Layout</h4>
-                            <p>Print the piano layout for better hand positioning.</p>
-                        </div>
-                    </div>
-                    <div class="help-item">
-                        <i class="fas fa-cog"></i>
-                        <div>
-                            <h4>Adjust Settings</h4>
-                            <p>Click the menu button to fine-tune detection settings.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <br>
+                <span class="note-display">Playing 🎵🎹: <span id="note-display"></span></span>
+            <br>
         </div>
     </div>
-    <script>
-    // Ensure keyboard help is positioned in bottom right corner
-    document.addEventListener('DOMContentLoaded', function() {
-        function positionKeyboardHelp() {
-            const keyboardHelp = document.querySelector('.keyboard-help');
-            if (keyboardHelp) {
-                keyboardHelp.style.cssText = `
-                    position: fixed !important;
-                    bottom: 20px !important;
-                    right: 20px !important;
-                    left: auto !important;
-                    top: auto !important;
-                    width: 320px !important;
-                    max-height: 80vh !important;
-                    overflow-y: auto !important;
-                    opacity: 1 !important;
-                    z-index: 1000 !important;
-                `;
-                // Remove any transform that might be positioning it
-                keyboardHelp.style.transform = 'none';
-                keyboardHelp.style.webkitTransform = 'none';
-                keyboardHelp.style.msTransform = 'none';
-                
-                // Also set these as attributes to ensure they stick
-                keyboardHelp.setAttribute('style', keyboardHelp.getAttribute('style') + 
-                    'position: fixed !important; ' +
-                    'bottom: 20px !important; ' +
-                    'right: 20px !important; ' +
-                    'left: auto !important; ' +
-                    'top: auto !important; ' +
-                    'width: 320px !important; ' +
-                    'max-height: 80vh !important; ' +
-                    'overflow-y: auto !important; ' +
-                    'opacity: 1 !important; ' +
-                    'z-index: 1000 !important;');
-            }
-        }
-        
-        // Run immediately
-        positionKeyboardHelp();
-        
-        // Run again after a short delay to catch any dynamic positioning
-        setTimeout(positionKeyboardHelp, 100);
-        setTimeout(positionKeyboardHelp, 500);
-        
-        // Also run when window loads
-        window.addEventListener('load', positionKeyboardHelp);
-    });
-    </script>
-    
     <footer class="app-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>Virtual Piano</h4>
-                <p>Play piano using hand tracking technology</p>
-                <div class="social-links">
-                    <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
-                    <a href="#" title="Documentation"><i class="fas fa-book"></i></a>
-                    <a href="#" title="Report Issue"><i class="fas fa-bug"></i></a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h4>Resources</h4>
-                <ul>
-                    <li><a href="/pianolayout.pdf" target="_blank" rel="noopener"><i class="fas fa-download"></i> Download Paper Layout</a></li>
-                    <li><a href="#" id="printLayoutBtn"><i class="fas fa-print"></i> Print Layout</a></li>
-                    <li><a href="#" id="showTutorial"><i class="fas fa-graduation-cap"></i> Tutorial</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>About</h4>
-                <p>Created with ❤️ using MediaPipe and TensorFlow.js</p>
-                <p class="version">v1.0.0</p>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2023 Virtual Piano. All rights reserved.</p>
-        </div>
+        <a href="/pianolayout.pdf" class="download-link" target="_blank" rel="noopener">
+            ⬇️ Download Paper Layout
+        </a>
     </footer>
-    
-    <!-- Hide keyboard help element -->
-    <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const keyboardHelp = document.querySelector(".keyboard-help");
-        if (keyboardHelp) {
-            keyboardHelp.style.display = "none";
-        }
-    });
-    </script>
 </body>
 </html>

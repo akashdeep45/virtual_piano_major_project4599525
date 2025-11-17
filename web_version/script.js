@@ -48,25 +48,27 @@ let hoveredKeyIndices = new Set();
 // Smoothing/debouncing for key detection (fast + stable)
 let keyDetectionHistory = {}; // key index -> array of recent detections
 let smoothedActiveKeys = new Set(); // Track smoothed active keys separately
-const SMOOTHING_FRAMES = 3; // Short history keeps response snappy yet stable
-const ACTIVATION_THRESHOLD = 0.5; // Balanced activation for quick taps
-const DEACTIVATION_THRESHOLD = 0.3; // Release quickly when finger lifts
+let SMOOTHING_FRAMES = 3; // Short history keeps response snappy yet stable
+let ACTIVATION_THRESHOLD = 0.5; // Balanced activation for quick taps
+let DEACTIVATION_THRESHOLD = 0.3; // Release quickly when finger lifts
 let canvasInitialized = false; // Track if canvas has been initialized
 
 // Movement detection for real piano-like behavior
 let previousFingerPositions = {}; // finger index -> { x, y, frame }
 let fingerKeyMapping = {}; // finger index -> key index
-let MOVEMENT_THRESHOLD = 10; // Minimum pixels of movement to trigger (adjustable)
-let DOWNWARD_MOVEMENT_THRESHOLD = 8; // Pixels of downward movement to trigger press (adjustable)
-let REST_THRESHOLD_FRAMES = 5; // Frames to wait before considering finger at rest (adjustable)
+
+// Adjustable parameters (can be changed via sidebar)
+let MOVEMENT_THRESHOLD = 10; // Minimum pixels of movement to trigger (for fast playing)
+let DOWNWARD_MOVEMENT_THRESHOLD = 8; // Pixels of downward movement to trigger press
+let REST_THRESHOLD_FRAMES = 5; // Frames to wait before considering finger at rest
 let fingerRestFrames = {}; // finger index -> frames at rest
 let fingerPreviousKeys = {}; // finger index -> previous key index (to detect key changes)
 let fingerTriggeredKeys = {}; // finger index -> key index that was last triggered (to prevent double triggers)
 let fingerTriggerFrames = {}; // finger index -> frame when key was last triggered
-let TRIGGER_COOLDOWN_FRAMES = 8; // Frames to wait before allowing same key to trigger again (adjustable)
+let TRIGGER_COOLDOWN_FRAMES = 8; // Frames to wait before allowing same key to trigger again
 
 // Landmark stabilization (reduces MediaPipe dot shaking)
-let LANDMARK_SMOOTHING_ALPHA = 0.45; // Balance between smoothness and responsiveness (adjustable)
+let LANDMARK_SMOOTHING_ALPHA = 0.45; // Balance between smoothness and responsiveness
 let stabilizedLandmarksCache = [];
 
 // Camera transform variables
@@ -424,8 +426,8 @@ function generatePianoKeys(startNote = null, numOctaves = null) {
     'A': 'A', 'A#': 'A#', 'B': 'B'
   };
   
-  // Track white key positions for proper black key placement
-  let whiteKeyPositions = [];
+  // Track the last white key X position for black key positioning
+  let lastWhiteKeyX = startX;
   
   for (let i = 0; i < totalKeys; i++) {
     const noteIndex = (startIndex + i) % 12;
@@ -461,34 +463,14 @@ function generatePianoKeys(startNote = null, numOctaves = null) {
         index: keyIndex++
       });
       
-      // Store white key position for black key placement
-      whiteKeyPositions.push({
-        left: currentX,
-        right: currentX + keyWidth,
-        center: currentX + keyWidth / 2
-      });
-      
+      lastWhiteKeyX = currentX;
       currentX += keyWidth;
     } else {
-      // Black key - positioned above the gap between white keys
-      // Black keys are positioned between the last white key and the next white key
-      let blackX;
-      
-      // Count how many white keys we've seen so far (for this black key)
-      const whiteKeysBefore = whiteKeyPositions.length;
-      
-      if (whiteKeysBefore > 0) {
-        // Position black key centered between the last white key and where the next white key will be
-        // The next white key will be at currentX, so center the black key between last white key's right edge and currentX
-        const lastWhiteKey = whiteKeyPositions[whiteKeysBefore - 1];
-        const nextWhiteKeyX = currentX; // Where the next white key will start
-        // Center the black key between last white key's right edge and next white key's left edge
-        blackX = (lastWhiteKey.right + nextWhiteKeyX) / 2 - blackKeyWidth / 2;
-      } else {
-        // First key is black (shouldn't happen with standard piano, but handle it)
-        blackX = currentX - blackKeyWidth / 2;
-      }
-      
+      // Black key - positioned above white keys
+      // In a real piano, black keys are positioned at the right edge of the previous white key
+      // For example: C# is between C and D, so it's at the right edge of C
+      // Position it at: lastWhiteKeyX + keyWidth - blackKeyWidth/2 (centered on the gap)
+      const blackX = lastWhiteKeyX + keyWidth - blackKeyWidth / 2;
       const polygon = [
         [blackX, startY],
         [blackX + blackKeyWidth, startY],
@@ -746,6 +728,96 @@ trackSlider.addEventListener('input', () => {
   }
 });
 
+// Playing Sensitivity Controls
+function setupPlayingSensitivityControls() {
+  // Movement Threshold
+  const movementThresholdSlider = document.getElementById('movementThresholdSlider');
+  const movementThresholdDisplay = document.getElementById('movement-threshold');
+  if (movementThresholdSlider && movementThresholdDisplay) {
+    movementThresholdSlider.addEventListener('input', (e) => {
+      MOVEMENT_THRESHOLD = parseInt(e.target.value);
+      movementThresholdDisplay.textContent = MOVEMENT_THRESHOLD;
+    });
+  }
+
+  // Downward Movement Threshold
+  const downwardThresholdSlider = document.getElementById('downwardThresholdSlider');
+  const downwardThresholdDisplay = document.getElementById('downward-threshold');
+  if (downwardThresholdSlider && downwardThresholdDisplay) {
+    downwardThresholdSlider.addEventListener('input', (e) => {
+      DOWNWARD_MOVEMENT_THRESHOLD = parseInt(e.target.value);
+      downwardThresholdDisplay.textContent = DOWNWARD_MOVEMENT_THRESHOLD;
+    });
+  }
+
+  // Rest Frames
+  const restFramesSlider = document.getElementById('restFramesSlider');
+  const restFramesDisplay = document.getElementById('rest-frames');
+  if (restFramesSlider && restFramesDisplay) {
+    restFramesSlider.addEventListener('input', (e) => {
+      REST_THRESHOLD_FRAMES = parseInt(e.target.value);
+      restFramesDisplay.textContent = REST_THRESHOLD_FRAMES;
+    });
+  }
+
+  // Trigger Cooldown
+  const cooldownFramesSlider = document.getElementById('cooldownFramesSlider');
+  const cooldownFramesDisplay = document.getElementById('cooldown-frames');
+  if (cooldownFramesSlider && cooldownFramesDisplay) {
+    cooldownFramesSlider.addEventListener('input', (e) => {
+      TRIGGER_COOLDOWN_FRAMES = parseInt(e.target.value);
+      cooldownFramesDisplay.textContent = TRIGGER_COOLDOWN_FRAMES;
+    });
+  }
+
+  // Landmark Smoothing
+  const landmarkSmoothingSlider = document.getElementById('landmarkSmoothingSlider');
+  const landmarkSmoothingDisplay = document.getElementById('landmark-smoothing');
+  if (landmarkSmoothingSlider && landmarkSmoothingDisplay) {
+    landmarkSmoothingSlider.addEventListener('input', (e) => {
+      LANDMARK_SMOOTHING_ALPHA = parseFloat(e.target.value);
+      landmarkSmoothingDisplay.textContent = LANDMARK_SMOOTHING_ALPHA.toFixed(2);
+    });
+  }
+
+  // Key Detection Smoothing
+  const keySmoothingFramesSlider = document.getElementById('keySmoothingFramesSlider');
+  const keySmoothingFramesDisplay = document.getElementById('key-smoothing-frames');
+  if (keySmoothingFramesSlider && keySmoothingFramesDisplay) {
+    keySmoothingFramesSlider.addEventListener('input', (e) => {
+      SMOOTHING_FRAMES = parseInt(e.target.value);
+      keySmoothingFramesDisplay.textContent = SMOOTHING_FRAMES;
+    });
+  }
+
+  // Activation Threshold
+  const activationThresholdSlider = document.getElementById('activationThresholdSlider');
+  const activationThresholdDisplay = document.getElementById('activation-threshold');
+  if (activationThresholdSlider && activationThresholdDisplay) {
+    activationThresholdSlider.addEventListener('input', (e) => {
+      ACTIVATION_THRESHOLD = parseFloat(e.target.value);
+      activationThresholdDisplay.textContent = ACTIVATION_THRESHOLD.toFixed(1);
+    });
+  }
+
+  // Deactivation Threshold
+  const deactivationThresholdSlider = document.getElementById('deactivationThresholdSlider');
+  const deactivationThresholdDisplay = document.getElementById('deactivation-threshold');
+  if (deactivationThresholdSlider && deactivationThresholdDisplay) {
+    deactivationThresholdSlider.addEventListener('input', (e) => {
+      DEACTIVATION_THRESHOLD = parseFloat(e.target.value);
+      deactivationThresholdDisplay.textContent = DEACTIVATION_THRESHOLD.toFixed(1);
+    });
+  }
+}
+
+// Setup playing sensitivity controls when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupPlayingSensitivityControls);
+} else {
+  setupPlayingSensitivityControls();
+}
+
 // Camera transform controls - setup after DOM is ready
 function setupCameraControls() {
   const flipHorizontalCheckbox = document.getElementById('flipHorizontal');
@@ -809,101 +881,6 @@ if (document.readyState === 'loading') {
 } else {
   // DOM is already loaded
   setupCameraControls();
-}
-
-// Setup playing sensitivity controls
-function setupSensitivityControls() {
-  // Movement threshold slider
-  const movementSlider = document.getElementById('movementThresholdSlider');
-  const movementDisplay = document.getElementById('movement-threshold');
-  if (movementSlider && movementDisplay) {
-    movementSlider.addEventListener('input', (e) => {
-      MOVEMENT_THRESHOLD = parseInt(e.target.value);
-      movementDisplay.textContent = MOVEMENT_THRESHOLD;
-    });
-  }
-
-  // Downward movement threshold slider
-  const downwardSlider = document.getElementById('downwardThresholdSlider');
-  const downwardDisplay = document.getElementById('downward-threshold');
-  if (downwardSlider && downwardDisplay) {
-    downwardSlider.addEventListener('input', (e) => {
-      DOWNWARD_MOVEMENT_THRESHOLD = parseInt(e.target.value);
-      downwardDisplay.textContent = DOWNWARD_MOVEMENT_THRESHOLD;
-    });
-  }
-
-  // Rest threshold slider
-  const restSlider = document.getElementById('restThresholdSlider');
-  const restDisplay = document.getElementById('rest-threshold');
-  if (restSlider && restDisplay) {
-    restSlider.addEventListener('input', (e) => {
-      REST_THRESHOLD_FRAMES = parseInt(e.target.value);
-      restDisplay.textContent = REST_THRESHOLD_FRAMES;
-    });
-  }
-
-  // Cooldown slider
-  const cooldownSlider = document.getElementById('cooldownSlider');
-  const cooldownDisplay = document.getElementById('cooldown-frames');
-  if (cooldownSlider && cooldownDisplay) {
-    cooldownSlider.addEventListener('input', (e) => {
-      TRIGGER_COOLDOWN_FRAMES = parseInt(e.target.value);
-      cooldownDisplay.textContent = TRIGGER_COOLDOWN_FRAMES;
-    });
-  }
-
-  // Smoothing slider
-  const smoothingSlider = document.getElementById('smoothingSlider');
-  const smoothingDisplay = document.getElementById('smoothing-alpha');
-  if (smoothingSlider && smoothingDisplay) {
-    smoothingSlider.addEventListener('input', (e) => {
-      LANDMARK_SMOOTHING_ALPHA = parseFloat(e.target.value);
-      smoothingDisplay.textContent = LANDMARK_SMOOTHING_ALPHA.toFixed(2);
-    });
-  }
-
-  // Reset button
-  const resetBtn = document.getElementById('resetSensitivity');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      // Reset to default values
-      MOVEMENT_THRESHOLD = 10;
-      DOWNWARD_MOVEMENT_THRESHOLD = 8;
-      REST_THRESHOLD_FRAMES = 5;
-      TRIGGER_COOLDOWN_FRAMES = 8;
-      LANDMARK_SMOOTHING_ALPHA = 0.45;
-
-      // Update sliders
-      if (movementSlider) {
-        movementSlider.value = MOVEMENT_THRESHOLD;
-        movementDisplay.textContent = MOVEMENT_THRESHOLD;
-      }
-      if (downwardSlider) {
-        downwardSlider.value = DOWNWARD_MOVEMENT_THRESHOLD;
-        downwardDisplay.textContent = DOWNWARD_MOVEMENT_THRESHOLD;
-      }
-      if (restSlider) {
-        restSlider.value = REST_THRESHOLD_FRAMES;
-        restDisplay.textContent = REST_THRESHOLD_FRAMES;
-      }
-      if (cooldownSlider) {
-        cooldownSlider.value = TRIGGER_COOLDOWN_FRAMES;
-        cooldownDisplay.textContent = TRIGGER_COOLDOWN_FRAMES;
-      }
-      if (smoothingSlider) {
-        smoothingSlider.value = LANDMARK_SMOOTHING_ALPHA;
-        smoothingDisplay.textContent = LANDMARK_SMOOTHING_ALPHA.toFixed(2);
-      }
-    });
-  }
-}
-
-// Initialize sensitivity controls when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', setupSensitivityControls);
-} else {
-  setupSensitivityControls();
 }
 
 import {
@@ -1630,14 +1607,6 @@ function updateKeyboardMapping() {
         keyToIndex = {};
         indexToKey = {};
         console.log('Keyboard mapping: No keys available yet');
-        const keyboardHelp = document.querySelector('.keyboard-help');
-        if (keyboardHelp) {
-            keyboardHelp.innerHTML = `
-                <div><strong>🎹 Keyboard Controls:</strong></div>
-                <div style="margin-top: 0.5rem; opacity: 0.8;">No keys available yet. Waiting for piano to load...</div>
-                <div style="margin-top: 0.5rem; font-size: 0.85em; opacity: 0.7;">💡 Click "Play in the air" button to generate keys</div>
-            `;
-        }
         return;
     }
 
@@ -1756,65 +1725,10 @@ function updateKeyboardMapping() {
     const maxWhiteKeys = whiteKeys.length;
     const maxBlackKeys = blackKeys.length;
     console.log(`✅ Keyboard mapping updated: ${maxWhiteKeys} white keys, ${maxBlackKeys} black keys (interleaved)`);
-
-    // Update keyboard help display
-    updateKeyboardHelp(whiteKeys, blackKeys);
-}
-
-// Function to update the keyboard help UI with current mapping
-function updateKeyboardHelp(whiteKeys, blackKeys) {
-    const keyboardHelp = document.querySelector('.keyboard-help');
-    if (!keyboardHelp) {
-        console.warn('Keyboard help element not found, will retry...');
-        // Retry after a short delay
-        setTimeout(() => updateKeyboardHelp(whiteKeys, blackKeys), 100);
-        return;
-    }
-
-    if ((!whiteKeys || whiteKeys.length === 0) && (!blackKeys || blackKeys.length === 0)) {
-        keyboardHelp.innerHTML = `
-            <div><strong>🎹 Keyboard Controls:</strong></div>
-            <div style="margin-top: 0.5rem; opacity: 0.8;">No keys available yet. Waiting for piano to load...</div>
-        `;
-        return;
-    }
-
-    let helpContent = '<div><strong>🎹 Keyboard Controls:</strong></div>';
-    
-    // White keys mapping (Tab, Q-P, [, ], \, 7, 8, 9, numpad +)
-    if (whiteKeys && whiteKeys.length > 0) {
-        const whiteMappings = whiteKeys.slice(0, whiteKeyLayout.length).map((key, i) => {
-            const keyboardKey = whiteKeyLayout[i] || '?';
-            const displayKey = keyboardKey === 'NumpadAdd' ? 'Num +' : keyboardKey.toUpperCase();
-            return `<kbd>${displayKey}</kbd> → ${key.note}`;
-        });
-        helpContent += `<div style="margin-top: 0.5rem;"><strong>White Keys (Tab, Q-P, [, ], \\, 7-9, Num+):</strong> ${whiteMappings.slice(0, 10).join(' ')}</div>`;
-        if (whiteMappings.length > 10) {
-            helpContent += `<div style="margin-top: 0.25rem; font-size: 0.9em; opacity: 0.9;">${whiteMappings.slice(10).join(' ')}</div>`;
-        }
-    }
-    
-    // Black keys mapping (`, 1-9, 0, -, =, Backspace, NumLock, /, *, numpad -)
-    if (blackKeys && blackKeys.length > 0) {
-        const blackMappings = blackKeys.slice(0, blackKeyLayout.length).map((key, i) => {
-            const keyboardKey = blackKeyLayout[i] || '?';
-            // Show readable key names
-            const displayKey = keyboardKey === '`' ? '`' : 
-                              keyboardKey === 'Backspace' ? 'Backspace' :
-                              keyboardKey === 'NumLock' ? 'NumLock' :
-                              keyboardKey === 'NumpadSubtract' ? 'Num -' :
-                              keyboardKey.toUpperCase();
-            return `<kbd>${displayKey}</kbd> → ${key.note}`;
-        });
-        helpContent += `<div style="margin-top: 0.5rem;"><strong>Black Keys (\`, 1-9, 0, -, =, Backspace, NumLock, /, *, Num-):</strong> ${blackMappings.slice(0, 10).join(' ')}</div>`;
-        if (blackMappings.length > 10) {
-            helpContent += `<div style="margin-top: 0.25rem; font-size: 0.9em; opacity: 0.9;">${blackMappings.slice(10).join(' ')}</div>`;
-        }
-    }
-    
-    helpContent += `<div style="margin-top: 0.5rem; font-size: 0.85em; opacity: 0.8;">✅ Ready! Press keys to play piano!</div>`;
-
-    keyboardHelp.innerHTML = helpContent;
+    console.log('Sample mappings:', sortedKeys.slice(0, 10).map((k, i) => {
+        const mappedKey = indexToKey[k.index] || '?';
+        return `${mappedKey}→${k.note}`;
+    }).join(', '));
 }
 
 // Track currently pressed keys to prevent key repeat issues
@@ -1878,15 +1792,6 @@ document.addEventListener('keydown', (event) => {
     // Debug: log key press if mapping is empty
     if (Object.keys(keyToIndex).length === 0) {
         console.log('Keyboard not mapped yet. Pressed key:', normalizedKey, '| event.key:', event.key, '| event.code:', event.code, '| exportKeys length:', exportKeys?.length || 0);
-        // Show helpful message
-        const keyboardHelp = document.querySelector('.keyboard-help');
-        if (keyboardHelp) {
-            keyboardHelp.innerHTML = `
-                <div><strong>🎹 Keyboard Controls:</strong></div>
-                <div style="margin-top: 0.5rem; color: #fbbf24;">⚠️ Piano keys not loaded yet. Please wait...</div>
-                <div style="margin-top: 0.5rem; font-size: 0.85em; opacity: 0.8;">Press "Play in the air" button to generate keys</div>
-            `;
-        }
         return;
     }
     
@@ -2005,57 +1910,8 @@ style.textContent = `
         transform: translateY(2px);
         box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     }
-    
-    .keyboard-help {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(10px);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        font-size: 13px;
-        z-index: 1000;
-        max-width: 90%;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        cursor: move;
-        user-select: none;
-    }
-    
-    .keyboard-help:hover {
-        background: rgba(15, 23, 42, 0.98);
-    }
-    
-    .keyboard-help kbd {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-        color: #fff;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-family: 'Poppins', monospace;
-        font-size: 11px;
-        font-weight: 600;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        margin: 0 2px;
-        display: inline-block;
-    }
-    
-    .keyboard-help strong {
-        color: #fbbf24;
-    }
 `;
 document.head.appendChild(style);
-
-// Add keyboard help UI
-const keyboardHelp = document.createElement('div');
-keyboardHelp.className = 'keyboard-help';
-keyboardHelp.innerHTML = `
-    <div><strong>🎹 Keyboard Controls:</strong></div>
-    <div style="margin-top: 0.5rem; opacity: 0.8;">Loading keyboard mapping...</div>
-`;
-document.body.appendChild(keyboardHelp);
 
 // Periodic check to ensure keyboard mapping is initialized
 let keyboardMappingCheckInterval = setInterval(() => {
@@ -2066,23 +1922,6 @@ let keyboardMappingCheckInterval = setInterval(() => {
     // Clear interval after 10 seconds (mapping should be done by then)
 }, 500);
 setTimeout(() => clearInterval(keyboardMappingCheckInterval), 10000);
-
-// Make the help draggable
-keyboardHelp.draggable = true;
-keyboardHelp.addEventListener('dragstart', (e) => {
-    e.dataTransfer.setData('text/plain', '');
-    keyboardHelp.style.opacity = '0.7';
-});
-
-keyboardHelp.addEventListener('dragend', () => {
-    keyboardHelp.style.opacity = '1';
-});
-
-document.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    keyboardHelp.style.left = e.clientX - (keyboardHelp.offsetWidth / 2) + 'px';
-    keyboardHelp.style.top = (e.clientY - 20) + 'px';
-});
 
 // Function to highlight piano keys when played via keyboard
 window.highlightKey = function(keyElement, isActive) {

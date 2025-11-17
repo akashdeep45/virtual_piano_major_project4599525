@@ -1,10 +1,18 @@
+<<<<<<< HEAD
+# Virtual Piano with Hand Tracking
+=======
 # Virtual Piano with Hand Gesture Control
+>>>>>>> 91059c35bf8db5015adf47e9a1ac36847f6690e4
 
 An interactive web-based piano application that lets you play using your computer keyboard, mouse, or hand gestures. This project combines traditional web technologies with computer vision for a unique musical experience.
 
 ## 🎹 Features
 
+<<<<<<< HEAD
 - Play piano using your computer keyboard, mouse, or hand gestures
+=======
+- Play piano using your computer keyboard or hand gestures
+>>>>>>> 91059c35bf8db5015adf47e9a1ac36847f6690e4
 - Real-time hand tracking using MediaPipe
 - Responsive design that works on both desktop and mobile devices
 - Multiple octaves with realistic piano sounds
