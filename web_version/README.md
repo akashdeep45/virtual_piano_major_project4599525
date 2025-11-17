@@ -1,4 +1,4 @@
-# Paper Piano - Web Version
+# Virtual Piano - Web Version
 
 Play piano on printed paper or in the air using hand tracking in your browser!
 
