@@ -35,6 +35,3 @@ A web-based piano application that lets you play piano using your computer keybo
 
 This project can be easily deployed to any static web hosting service like Vercel, Netlify, or GitHub Pages.
 
-### Deploy to Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fakashdeep45%2Fpaperpiano&project-name=paperpiano&repository-name=paperpiano)
