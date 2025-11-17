@@ -20,7 +20,7 @@ A web-based piano application that lets you play piano using your computer keybo
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/akashdeep45/paperpiano.git
+   git clone https://github.com/akashdeep45/virtual_piano_major_project4599525.git
    cd paperpiano
    ```
 
